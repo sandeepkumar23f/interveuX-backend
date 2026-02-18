@@ -26,7 +26,7 @@ export const SignUp = async (req, res) => {
     if (existingUser) {
       return res.status(409).json({
         success: false,
-        message: "User already exists, please login",
+        message: "User already exists, please login"
       });
     }
 
@@ -48,7 +48,7 @@ export const SignUp = async (req, res) => {
         email: email,
       };
 
-      const token = jwt.sign(tokenData, process.env.JWT_SECRET, {
+      const token = jwt.sign(tokenData,"Google", process.env.JWT_SECRET, {
         expiresIn: "5d",
       });
 
@@ -101,7 +101,7 @@ export const Login = async (req, res) => {
         return res.status(500).json({
           success: false,
           message: "jwtError",
-          error: JSON.stringify(error),
+          error: JSON.stringify(error)
         });
       }
       res.cookie("token", token, {

@@ -3,6 +3,7 @@ import cors from "cors"
 import dotenv from "dotenv"
 import cookieParser from "cookie-parser"
 import { connection } from "./config/dbconfig.js"
+import authRoutes from "./routes/authRoutes.js"
 dotenv.config()
 const app = express()
 const allowedOrigins = [
@@ -24,6 +25,7 @@ app.use(
 app.use(express.json())
 app.use(cookieParser())
 connection()
+app.use("/api/auth",authRoutes)
 app.listen(port,(req,res)=>{
     console.log(`app is running on port ${port}`)
 })
