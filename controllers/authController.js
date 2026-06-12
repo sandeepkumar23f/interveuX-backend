@@ -168,8 +168,8 @@ export const GoogleLogin = async (req, res) => {
     const userData = {
       googleId: payload['sub'],
       email: payload['email'],
-      
-      
+      name: payload['name'],
+      picture: payload['picture'],
     };
 
     const db = await connection();
