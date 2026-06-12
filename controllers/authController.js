@@ -9,7 +9,6 @@ export const SignUp = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // validation
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -20,7 +19,6 @@ export const SignUp = async (req, res) => {
     const db = await connection();
     const collection = db.collection("users");
 
-    // check existing user by email
     const existingUser = await collection.findOne({ email });
 
     if (existingUser) {
@@ -30,7 +28,6 @@ export const SignUp = async (req, res) => {
       });
     }
 
-    // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = {
@@ -52,7 +49,6 @@ export const SignUp = async (req, res) => {
         expiresIn: "5d",
       });
 
-      // send cookie
       res.cookie("token", token, {
         httpOnly: true,
         secure: true,
@@ -80,43 +76,74 @@ export const SignUp = async (req, res) => {
 };
 
 export const Login = async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({
-      success: false,
-      message: "All fields are required",
-    });
-  }
-  const db = await connection();
-  const collection = db.collection("users");
-  const result = await collection.findOne({
-    email,
-    password,
-  });
-  if (result) {
-    const tokenData = { _id: result._id.toString(), email: result.email };
+  try {
+    const { email, password } = req.body;
 
-    jwt.sign(tokenData, "Google", { expiresIn: "5d" }, (error, token) => {
-      if (error) {
-        return res.status(500).json({
-          success: false,
-          message: "jwtError",
-          error: JSON.stringify(error)
-        });
-      }
-      res.cookie("token", token, {
-        httpOnly: true,
-        sameSite: "none",
-        secure: true,
-        path: "/",
-        expiresIn: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
       });
-      res.send({ success: true, message: "Login successfull" });
+    }
+
+    const db = await connection();
+    const collection = db.collection("users");
+
+    const user = await collection.findOne({ email });
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(
+      password,
+      user.password
+    );
+
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+
+    const tokenData = {
+      _id: user._id.toString(),
+      email: user.email,
+    };
+
+    const token = jwt.sign(
+      tokenData,
+      "Google",
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "5d",
+      }
+    );
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+      expires: new Date(
+        Date.now() + 5 * 24 * 60 * 60 * 1000
+      ),
     });
-  } else {
-    res.send({
+
+    return res.status(200).json({
+      success: true,
+      message: "Login successful",
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
       success: false,
-      message: "Login failed",
+      message: error.message,
     });
   }
 };
