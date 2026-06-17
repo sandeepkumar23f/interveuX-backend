@@ -17,7 +17,7 @@ export const CreateInterview = async (req, res) => {
     const collection = db.collection("interviews");
 
     const interview = {
-      userId: req.user.userId,
+      userId: req.user._id,
       role,
       messages: [],
       status: "active",
