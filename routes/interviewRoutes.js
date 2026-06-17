@@ -1,0 +1,9 @@
+import express from "express"
+import { CreateInterview } from "../controllers/interviewController.js"
+import verifyJWTToken from "../middlewares/verifyJWTToken.js"
+
+const router = express.Router();
+
+router.post("/create",verifyJWTToken,CreateInterview);
+
+export default router;
